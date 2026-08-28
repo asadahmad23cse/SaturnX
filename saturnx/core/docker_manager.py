@@ -544,6 +544,9 @@ class DockerManager:
         self._browser_stream_lock: asyncio.Lock | None = None
         self._browser_stream_relay_state: dict[str, object] = {}
         self._orphan_guardian: subprocess.Popen | None = None
+        self._orphan_guardian_pid: int | None = None
+        self._orphan_guardian_start_token: str = ""
+        self._orphan_guardian_cleanup_signal: Path | None = None
         configured_stream_port = int(
             getattr(config, "browser_stream_port", 0) or 0
         )
@@ -1068,6 +1071,12 @@ class DockerManager:
                 "Could not establish exact process identity; orphan guardian disabled."
             )
             return
+        cleanup_signal = self.workspace_path / ".saturnx-guardian-cleanup"
+        try:
+            cleanup_signal.unlink(missing_ok=True)
+        except OSError as exc:
+            logger.warning("Could not prepare orphan guardian signal: %s", exc)
+            return
         argv = [
             sys.executable,
             "-m",
@@ -1084,6 +1093,8 @@ class DockerManager:
             self._workspace_root_hash,
             "--instance-id",
             self._instance_id,
+            "--cleanup-signal",
+            str(cleanup_signal),
         ]
         kwargs: dict[str, object] = {
             "stdin": subprocess.DEVNULL,
@@ -1091,43 +1102,171 @@ class DockerManager:
             "stderr": subprocess.DEVNULL,
             "close_fds": True,
         }
-        if os.name == "nt":
-            kwargs["creationflags"] = (
-                subprocess.CREATE_NEW_PROCESS_GROUP
-                | subprocess.DETACHED_PROCESS
-                | subprocess.CREATE_NO_WINDOW
-                | subprocess.CREATE_BREAKAWAY_FROM_JOB
-            )
-        else:
+        if os.name != "nt":
             kwargs["start_new_session"] = True
         try:
-            self._orphan_guardian = subprocess.Popen(argv, **kwargs)
+            if os.name == "nt":
+                # Some Windows MCP transports explicitly terminate the full
+                # child-process job, even when CREATE_BREAKAWAY_FROM_JOB is
+                # used. Ask the Windows process service to create the hidden
+                # guardian outside that job so it can finish exact-owner
+                # cleanup after the STDIO server is torn down.
+                pythonw = Path(sys.executable).with_name("pythonw.exe")
+                guardian_executable = (
+                    pythonw if pythonw.is_file() else Path(sys.executable)
+                )
+                guardian_command = subprocess.list2cmdline(
+                    [str(guardian_executable), *argv[1:]]
+                ).replace("'", "''")
+                powershell_script = (
+                    "$ErrorActionPreference='Stop';"
+                    "$result=Invoke-CimMethod -ClassName Win32_Process "
+                    "-MethodName Create -Arguments @{"
+                    f"CommandLine='{guardian_command}'"
+                    "};"
+                    "if($result.ReturnValue -ne 0){"
+                    "throw ('Win32_Process.Create failed: '+$result.ReturnValue)"
+                    "};"
+                    "[Console]::Out.Write($result.ProcessId)"
+                )
+                spawned = subprocess.run(
+                    [
+                        "powershell.exe",
+                        "-NoProfile",
+                        "-NonInteractive",
+                        "-WindowStyle",
+                        "Hidden",
+                        "-Command",
+                        powershell_script,
+                    ],
+                    text=True,
+                    capture_output=True,
+                    timeout=10,
+                    check=False,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+                if spawned.returncode != 0:
+                    diagnostic = spawned.stderr.strip().replace("\n", " ")[:500]
+                    raise OSError(
+                        "PowerShell guardian bootstrap failed"
+                        + (f": {diagnostic}" if diagnostic else "")
+                    )
+                guardian_pid = int(spawned.stdout.strip())
+                guardian_token = _process_start_token(guardian_pid)
+                if not guardian_token:
+                    raise OSError("could not establish detached guardian identity")
+                self._orphan_guardian = None
+                self._orphan_guardian_pid = guardian_pid
+                self._orphan_guardian_start_token = guardian_token
+            else:
+                self._orphan_guardian = subprocess.Popen(argv, **kwargs)
+                self._orphan_guardian_pid = self._orphan_guardian.pid
+                self._orphan_guardian_start_token = _process_start_token(
+                    self._orphan_guardian.pid
+                )
+            self._orphan_guardian_cleanup_signal = cleanup_signal
             logger.info(
                 "Started exact-owner orphan guardian (pid=%s).",
-                self._orphan_guardian.pid,
+                self._orphan_guardian_pid,
             )
-        except OSError as exc:
+        except (OSError, subprocess.SubprocessError, ValueError) as exc:
+            self._orphan_guardian = None
+            self._orphan_guardian_pid = None
+            self._orphan_guardian_start_token = ""
+            self._orphan_guardian_cleanup_signal = None
             logger.warning("Could not start the SaturnX orphan guardian: %s", exc)
+
+    def _orphan_guardian_is_live(self) -> bool:
+        process = getattr(self, "_orphan_guardian", None)
+        if process is not None:
+            return process.poll() is None
+        pid = getattr(self, "_orphan_guardian_pid", None)
+        token = getattr(self, "_orphan_guardian_start_token", "")
+        return bool(
+            pid
+            and token
+            and _is_process_running(pid)
+            and _process_start_token(pid) == token
+        )
+
+    async def _wait_for_orphan_guardian(self, timeout: float) -> int:
+        process = getattr(self, "_orphan_guardian", None)
+        if process is not None:
+            return await asyncio.wait_for(
+                asyncio.to_thread(process.wait),
+                timeout=timeout,
+            )
+        deadline = time.monotonic() + timeout
+        while self._orphan_guardian_is_live():
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            await asyncio.sleep(0.1)
+        return 0
+
+    def _request_orphan_guardian_cleanup(self) -> bool:
+        """Ask the detached guardian to remove its exact-owned container now."""
+        signal_path = getattr(self, "_orphan_guardian_cleanup_signal", None)
+        if not self._orphan_guardian_is_live() or signal_path is None:
+            return False
+        try:
+            # This tiny synchronous write must complete before a short-lived
+            # STDIO transport can terminate the server process.
+            signal_path.write_text("cleanup\n", encoding="ascii")
+        except OSError as exc:
+            logger.warning("Could not signal orphan guardian cleanup: %s", exc)
+            return False
+        return True
 
     async def _settle_orphan_guardian(self) -> None:
         """Confirm the guardian exits after ordinary container cleanup."""
         process = getattr(self, "_orphan_guardian", None)
         self._orphan_guardian = None
-        if process is None:
-            return
-        if process.poll() is None:
-            process.terminate()
-        try:
-            await asyncio.wait_for(asyncio.to_thread(process.wait), timeout=3)
-        except TimeoutError:
-            process.kill()
+        guardian_pid = getattr(self, "_orphan_guardian_pid", None)
+        guardian_token = getattr(self, "_orphan_guardian_start_token", "")
+        signal_path = getattr(self, "_orphan_guardian_cleanup_signal", None)
+        if process is not None:
+            if process.poll() is None:
+                process.terminate()
             try:
                 await asyncio.wait_for(asyncio.to_thread(process.wait), timeout=3)
             except TimeoutError:
+                process.kill()
+                try:
+                    await asyncio.wait_for(
+                        asyncio.to_thread(process.wait),
+                        timeout=3,
+                    )
+                except TimeoutError:
+                    logger.warning(
+                        "Orphan guardian PID %s did not terminate promptly.",
+                        process.pid,
+                    )
+        detached_guardian_live = bool(
+            guardian_pid
+            and guardian_token
+            and _is_process_running(guardian_pid)
+            and _process_start_token(guardian_pid) == guardian_token
+        )
+        if process is None and detached_guardian_live:
+            # A Windows guardian is intentionally outside this process tree.
+            # It will exit after the signal/container outcome or when this
+            # exact owner disappears; do not broaden termination to its PID.
+            logger.warning(
+                "Detached orphan guardian PID %s is still settling.",
+                guardian_pid,
+            )
+        if signal_path is not None and not detached_guardian_live:
+            try:
+                signal_path.unlink(missing_ok=True)
+            except OSError as exc:
                 logger.warning(
-                    "Orphan guardian PID %s did not terminate promptly.",
-                    process.pid,
+                    "Could not remove orphan guardian signal %s: %s",
+                    signal_path,
+                    exc,
                 )
+        self._orphan_guardian_pid = None
+        self._orphan_guardian_start_token = ""
+        self._orphan_guardian_cleanup_signal = None
 
     async def _start_container_locked(self) -> None:
         """Full startup: verify setup → create container → wait for ready."""
@@ -1479,6 +1618,11 @@ class DockerManager:
             await self._settle_orphan_guardian()
             return
 
+        guardian_cleanup_requested = (
+            not self._config.preserve_container
+            and self._request_orphan_guardian_cleanup()
+        )
+
         task = getattr(self, "_ready_task", None)
         if task is not None and not task.done():
             task.cancel()
@@ -1495,7 +1639,44 @@ class DockerManager:
                     **getattr(self, "_host_port_bindings", {}),
                     **self._container_host_bindings(self._container),
                 }
-                await asyncio.to_thread(self._container.remove, force=True)
+                removed_by_guardian = False
+                if guardian_cleanup_requested:
+                    try:
+                        guardian_exit = await self._wait_for_orphan_guardian(30)
+                        if guardian_exit == 0:
+                            try:
+                                await asyncio.to_thread(
+                                    self._client.containers.get,
+                                    str(self._container.id),
+                                )
+                            except NotFound:
+                                removed_by_guardian = True
+                        if not removed_by_guardian:
+                            logger.warning(
+                                "Orphan guardian did not confirm container "
+                                "removal; falling back to direct cleanup."
+                            )
+                    except TimeoutError:
+                        logger.warning(
+                            "Orphan guardian cleanup did not finish within "
+                            "30 seconds; falling back to direct cleanup."
+                        )
+                if not removed_by_guardian:
+                    # Docker Desktop can leave a running container behind when
+                    # an STDIO client terminates the server while force-remove
+                    # is pending. Release ports first and prevent a legacy
+                    # restart policy from reviving the container.
+                    await asyncio.to_thread(
+                        self._container.update,
+                        restart_policy={"Name": "no"},
+                    )
+                    try:
+                        await asyncio.to_thread(self._container.stop, timeout=1)
+                    except APIError:
+                        # An already-stopped container has released its ports
+                        # and is still safe to remove below.
+                        pass
+                    await asyncio.to_thread(self._container.remove, force=True)
                 await self._wait_for_host_ports_available(released_bindings)
             except NotFound:
                 pass
