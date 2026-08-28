@@ -15,11 +15,11 @@ venv/
 .ruff_cache/
 .claude/
 
-# Hercules runtime
+# SaturnX runtime
 resources_cache/
 workspace/
-.hercules.lock
-.hercules/
+.saturnx.lock
+.saturnx/
 AGENTS.md
 CLAUDE.md
 tests/
@@ -44,7 +44,7 @@ wordlists/SecLists.zip
 wordlists/
 
 # Extensions
-hercules-extension/
+saturnx-extension/
 
 # Unused directories
 docs/

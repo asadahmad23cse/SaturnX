@@ -1,9 +1,9 @@
 ---
-name: hercules-setup-contract
-description: Ordered outcome and safety contract for an AI agent installing or upgrading Hercules MCP
+name: saturnx-setup-contract
+description: Ordered outcome and safety contract for an AI agent installing or upgrading SaturnX MCP
 ---
 
-# Install or upgrade Hercules MCP
+# Install or upgrade SaturnX MCP
 
 This is an ordered contract for a capable terminal agent, not a shell recipe.
 Adapt actions to the actual operating system, CPU, shell, Docker context,
@@ -39,7 +39,7 @@ but no mutation may cross a barrier whose prerequisites have not passed:
 6. Required assets, protected `.env`, and the non-secret state candidate are
    complete.
 7. The independent portable skill is installed when supported.
-8. Only the active client's Hercules entry points to the absolute STDIO launcher.
+8. Only the active client's SaturnX entry points to the absolute STDIO launcher.
 9. A real cold MCP connection reports the expected tools and all seven resources.
 10. Every transaction-owned temporary path, process, container, and port is gone,
     and the schema-4 success state is committed last.
@@ -115,14 +115,14 @@ Inspect the host's TCP dynamic and excluded ranges before accepting runtime
 ports. New installations use loopback-only `MSF_RPC_PORT=15553`; it is below
 the standard Windows and Linux ephemeral ranges. Preserve an existing explicit
 value, including the historical `55553`, but keep automatic allocation enabled
-so Hercules can select and report a dispersed low service port when that value
+so SaturnX can select and report a dispersed low service port when that value
 is unavailable. Do not rewrite an existing port merely because it is historical.
 
 Perform the independent read-only inspections from the fast path concurrently
 when the host can support them. Consolidate their results at this checkpoint
 before creating or updating the durable installation.
 
-Hercules images support `linux/amd64` and `linux/arm64`. An unsupported host may
+SaturnX images support `linux/amd64` and `linux/arm64`. An unsupported host may
 proceed only when the selected Docker context intentionally provides compatible
 emulation. Record the effective image platform; do not infer it solely from the
 host when a remote Docker context is active.
@@ -134,20 +134,20 @@ active harness remains ambiguous after checking process and environment markers.
 ## 3. Prepare the source and locked launcher
 
 Place a managed checkout in a durable, non-synced user-data location. Prefer
-the latest stable Hercules release. When no release exists, use the default
+the latest stable SaturnX release. When no release exists, use the default
 branch and record its exact commit. Update an existing successful checkout only
 when it is clean and can advance without rewriting history. A checkout without
 committed schema-4 state is an incomplete first installation, not an upgrade.
 
 Create a persistent locked Python tool environment from the checkout and
-`uv.lock`. Hercules must remain associated with that durable source because the
+`uv.lock`. SaturnX must remain associated with that durable source because the
 runtime needs its Dockerfile, entrypoint, skill, and configuration. Resolve the
 launcher from the active `uv` tool executable directory and verify its absolute
 path directly. Do not depend on a GUI client inheriting the user's shell `PATH`.
 
-Only after this checkpoint may the agent invoke Hercules' setup-information
+Only after this checkpoint may the agent invoke SaturnX' setup-information
 mode. Before it, inspect repository metadata directly rather than assuming an
-already installed `hercules` command.
+already installed `saturnx` command.
 
 ## 4. Read and validate setup facts
 
@@ -167,7 +167,7 @@ Treat its output as the source of truth for:
 
 Capture setup JSON as UTF-8 stdout and keep stderr separate. Parse and validate
 the JSON rather than accepting a zero process exit alone. A
-`source_association_invalid` result means the launcher imported Hercules from
+`source_association_invalid` result means the launcher imported SaturnX from
 an incomplete or non-editable package location; repair its association with the
 durable checkout before any image build.
 
@@ -218,7 +218,7 @@ reported cause.
 ## 6. Commit assets, environment, and state
 
 Provision only checksum-verified wordlists required by the confirmed profile.
-Keep reusable assets in `HERCULES_WORDLIST_ROOT`, preferably outside the
+Keep reusable assets in `SATURNX_WORDLIST_ROOT`, preferably outside the
 checkout, and reuse valid caches. An unselected wordlist is not required rather
 than failed.
 
@@ -240,7 +240,7 @@ values. If a secret reaches output, logs, a transcript, or client configuration,
 treat it as burned, rotate it before acceptance, and never display its replacement.
 
 Prepare the schema-4 non-secret state candidate for the platform's user
-configuration area or the ignored project `.hercules/install.json`. Preserve
+configuration area or the ignored project `.saturnx/install.json`. Preserve
 unknown non-secret fields. Record the exact revision, scope, launcher,
 capability selection, platform, base digest, APT suite, image identity, expected
 count, workspace, asset root, CA fingerprint, browser artifact, skill path, and
@@ -256,11 +256,11 @@ committed versions on failure.
 
 ## 7. Install the independent skill
 
-Install the canonical `skills/hercules-mcp` directory in the active client's
+Install the canonical `skills/saturnx-mcp` directory in the active client's
 current Agent Skills discovery location when that feature is supported. Keep
 one provider-neutral skill; do not embed or declare a skill in plugin adapters.
 For OpenCode, honor its effective configuration/XDG locations and use
-`.agents/skills/hercules-mcp` where its current documentation requires it.
+`.agents/skills/saturnx-mcp` where its current documentation requires it.
 
 Lack of Agent Skills support does not block MCP installation. Report that the
 portable skill was omitted because the client lacks the feature, then continue
@@ -269,18 +269,18 @@ with STDIO registration.
 ## 8. Register only the active MCP client
 
 Prefer the active client's current native registration interface. Otherwise,
-atomically edit only its effective Hercules entry while preserving unrelated
+atomically edit only its effective SaturnX entry while preserving unrelated
 JSON, JSONC, TOML, comments, and servers. Inspect the installed client rather
 than assuming a historical schema. OpenCode may use a direct or nested MCP
 layout; honor `OPENCODE_CONFIG` and XDG locations.
 
 Repository MCP JSON files are templates. Render the installed copy with the
-absolute launcher before registration; never install the bare `hercules`
+absolute launcher before registration; never install the bare `saturnx`
 command verbatim. The entry uses STDIO, contains no secrets or checkout-relative
 working directory, and changes no unrelated client. Snapshot the existing
-Hercules entry, validate the effective replacement, and restore it on failure.
+SaturnX entry, validate the effective replacement, and restore it on failure.
 
-Hercules completes MCP initialization and exposes schemas before its Docker
+SaturnX completes MCP initialization and exposes schemas before its Docker
 runtime is ready. Validate the active client's cold-start timeout against its
 current schema. Use a 120000 millisecond startup timeout through the client's
 native local-STDIO setting when it supports one. OpenCode's local entry must use
@@ -293,7 +293,7 @@ STDIO MCP harness. For an unknown compatible client, provide its native generic
 STDIO entry and exact optional skill destination. For a client without local
 STDIO support, stop as unsupported rather than leaving partial configuration.
 
-Do not assume the active client is the only Hercules user. A healthy MCP server
+Do not assume the active client is the only SaturnX user. A healthy MCP server
 from another coding agent or IDE owns its own container and must remain running.
 Keep automatic runtime-port allocation enabled unless the user explicitly needs
 fixed ports. After startup, obtain the effective RPC, reverse-listener, and
@@ -317,29 +317,29 @@ checks, and the seven resource reads may run concurrently when independent.
 Keep operations that mutate one runtime or browser session ordered, and do not
 commit schema-4 success state until every required result has passed.
 
-When another Hercules client is already live, repeat the cold check without
+When another SaturnX client is already live, repeat the cold check without
 stopping it. The new client must connect immediately, preserve the existing
 container, select different effective ports, complete one local Docker-backed
 call, and remove only its own container on shutdown.
 
 Also exercise the active harness's actual disconnect behavior with a disposable
 verification session. Some IDEs force-terminate local MCP subprocesses instead
-of waiting for lifespan cleanup. Hercules' detached guardian must then validate
+of waiting for lifespan cleanup. SaturnX' detached guardian must then validate
 the exact container ID, project/workspace labels, owner PID, and process creation
 time before removing that session's container. Treat a surviving owned
 container or port binding as an installation failure; never compensate with a
 broad Docker prune.
 
 Exercise browser readiness against a transaction-owned HTTP fixture running
-inside the Hercules container. Use container loopback, confirm a successful
+inside the SaturnX container. Use container loopback, confirm a successful
 navigation result, native screenshots, and loopback-only streaming, then stop
 the fixture and verify its port is released. This must not depend on permission
 to start a listener on the coding-agent host.
 
-In bridge mode, browser `localhost` is the Hercules container. To reach a
+In bridge mode, browser `localhost` is the SaturnX container. To reach a
 service on the Docker engine host, use `host.docker.internal`, the name
 recommended by [Docker's networking guidance](https://docs.docker.com/desktop/features/networking/networking-how-tos/).
-Hercules provides the equivalent `host-gateway` mapping on supported bridge
+SaturnX provides the equivalent `host-gateway` mapping on supported bridge
 engines and reports its resolution through `system_network_info`. With a remote
 Docker context, that name reaches the remote engine host, not necessarily the
 coding-agent machine. The host service must listen on an interface reachable by
@@ -361,11 +361,11 @@ created by the transaction. Use a `finally`-equivalent cleanup path so a failed
 acceptance check cannot bypass it.
 
 Terminate transaction-owned background processes and confirm they exited.
-Stop and remove verification or failed Hercules containers only after their
+Stop and remove verification or failed SaturnX containers only after their
 exact ownership labels match this transaction, then confirm their ports are
 released. Remove transaction-owned scripts, logs, redirected stdout/stderr,
 markers, staging directories, and obsolete client snapshots. On failure,
-restore only the prior Hercules client entry. Verify that no secret entered a
+restore only the prior SaturnX client entry. Verify that no secret entered a
 log or client configuration. Report each exact artifact that could not be
 cleaned; never conceal partial cleanup.
 
@@ -395,16 +395,16 @@ configuration and Agent Skills from its effective schema, native help, or
 current authoritative documentation. Ask the user to perform the smallest
 necessary activation step:
 
-- reload only the Hercules MCP server when verified MCP hot reload is supported;
+- reload only the SaturnX MCP server when verified MCP hot reload is supported;
 - start a new agent session when settings or skills are discovered per session;
 - reload the IDE window or restart the application only when required.
 
 Never terminate or restart the user's agent or IDE automatically. If the
-effective Hercules connection and installed skill are already visible, report
+effective SaturnX connection and installed skill are already visible, report
 `installed_and_verified` and explicitly say that no restart is required.
 Otherwise report `activation_pending_restart`, state exactly what the user must
 reload or restart and why, and ask them to do it. When the user returns, verify
-the effective Hercules connection, expected tool and resource surface, and
+the effective SaturnX connection, expected tool and resource surface, and
 skill discovery without repeating installation or contacting an external
 target.
 
@@ -421,10 +421,10 @@ Do not blindly retry an unchanged failure:
 | Public or corporate TLS trust failure | Deterministic | Correct verified trust; never disable TLS or hostname checks |
 | Same Docker layer fails with unchanged inputs | Source defect | Stop, preserve the complete log, and identify the failing layer |
 | Backend or capability manifest missing | Deterministic | Rebuild the same confirmed profile; never silently omit it |
-| MCP registration or validation fails | Deterministic | Restore the prior Hercules entry and preserve unrelated settings |
+| MCP registration or validation fails | Deterministic | Restore the prior SaturnX entry and preserve unrelated settings |
 
 Treat installation as a transaction. Before changing committed state, snapshot
-only non-secret state and the active Hercules client entry. On failure, restore
+only non-secret state and the active SaturnX client entry. On failure, restore
 the last known-good configuration and remove only transaction-owned staging
 data. Retain checksum-valid downloads, immutable build cache, existing images,
 secrets, workspace evidence, and unrelated client configuration.

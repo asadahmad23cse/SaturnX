@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "hercules": {
-      "command": "__HERCULES_ABSOLUTE_LAUNCHER__",
+    "saturnx": {
+      "command": "__SATURNX_ABSOLUTE_LAUNCHER__",
       "args": []
     }
   }

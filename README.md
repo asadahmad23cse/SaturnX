@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Hercules MCP" width="220" style="margin-bottom: 20px;"/>
+  <img src="assets/logo.svg" alt="SaturnX MCP" width="220" style="margin-bottom: 20px;"/>
 </p>
 
-<h1 align="center">Hercules MCP</h1>
+<h1 align="center">SaturnX MCP</h1>
 
 <p align="center">
   <em>Containerized offensive-security workflows for AI agents through the Model Context Protocol</em>
@@ -15,26 +15,26 @@
   <img src="https://img.shields.io/badge/license-MIT-F57C00" alt="MIT license" />
 </p>
 
-Hercules MCP is a Python FastMCP server that gives terminal-capable AI agents a
+SaturnX MCP is a Python FastMCP server that gives terminal-capable AI agents a
 structured interface to security tools running in an owned Kali Docker
 container. It keeps evidence in managed host workspaces and returns bounded,
 agent-friendly results without hiding whether output was filtered, truncated,
 or interrupted.
 
-> **Authorized use only.** Run Hercules only against systems for which you have
+> **Authorized use only.** Run SaturnX only against systems for which you have
 > explicit permission. Installation and verification are local and
 > non-destructive; they must not scan, exploit, navigate to, or check public
 > egress against an external target.
 
 <p align="center">
-  <img src="assets/architecture.png" alt="Hercules MCP architecture" width="720" />
+  <img src="assets/architecture.png" alt="SaturnX MCP architecture" width="720" />
 </p>
 
 ## Contents
 
 - [Install with your AI agent](#install-with-your-ai-agent)
 - [Capabilities and MCP surface](#capabilities-and-mcp-surface)
-- [How Hercules works](#how-hercules-works)
+- [How SaturnX works](#how-saturnx-works)
 - [Headless browser automation](#headless-browser-automation)
 - [Output, artifacts, sessions, and workspaces](#output-artifacts-sessions-and-workspaces)
 - [MCP resources and agent guidance](#mcp-resources-and-agent-guidance)
@@ -51,7 +51,7 @@ Paste this prompt unchanged into any terminal-capable coding agent. The same
 prompt adapts to Windows, macOS, and capable Linux distributions:
 
 ```text
-Install or upgrade Hercules MCP from https://github.com/0xMihirK/hercules-mcp by following https://github.com/0xMihirK/hercules-mcp/blob/main/install.md. Adapt to my host and active terminal-capable AI client; on first install ask about intended use and capabilities, scope, and a browser proxy only when browser support is selected. Preserve existing configuration, secrets, assets, and evidence; configure only the active client with an absolute secret-free STDIO launcher, then complete local-only verification and mandatory cleanup. Never contact an external target, use a bare-PATH launcher, silently make privileged changes, or report success early. After cleanup, identify whether this client requires an MCP reload, a new agent session, or an IDE restart, and ask me to perform the smallest restart needed to load its new settings and skill.
+Install or upgrade SaturnX MCP from https://github.com/asadahmad23cse/SaturnX by following https://github.com/asadahmad23cse/SaturnX/blob/main/install.md. Adapt to my host and active terminal-capable AI client; on first install ask about intended use and capabilities, scope, and a browser proxy only when browser support is selected. Preserve existing configuration, secrets, assets, and evidence; configure only the active client with an absolute secret-free STDIO launcher, then complete local-only verification and mandatory cleanup. Never contact an external target, use a bare-PATH launcher, silently make privileged changes, or report success early. After cleanup, identify whether this client requires an MCP reload, a new agent session, or an IDE restart, and ask me to perform the smallest restart needed to load its new settings and skill.
 ```
 
 The authoritative installation contract is [install.md](install.md). It defines
@@ -62,7 +62,7 @@ knowledge, and consults current vendor documentation before acting.
 
 On a first install, the agent:
 
-- asks what Hercules will be used for and recommends the smallest useful
+- asks what SaturnX will be used for and recommends the smallest useful
   capability set;
 - confirms user-wide or project-local scope;
 - asks about a browser proxy only when browser support is selected;
@@ -75,9 +75,9 @@ On a first install, the agent:
 
 Upgrades preserve the selected capabilities, `.env`, secrets, workspace
 evidence, verified assets, scope, proxy preference, and unrelated client
-settings unless the operator explicitly changes them. Hercules does not provide
+settings unless the operator explicitly changes them. SaturnX does not provide
 a mutating setup executable: the installing agent owns the transaction and uses
-Hercules' read-only setup facts to avoid guessing.
+SaturnX' read-only setup facts to avoid guessing.
 
 Host prerequisites are Git, [`uv`](https://docs.astral.sh/uv/), and a working
 Docker Engine, Docker Desktop, or compatible Docker context with local STDIO
@@ -114,13 +114,13 @@ The catalog groups these stable capability keys:
 Bundles keep consolidated APIs intact: Nmap includes NSE authoring, Nuclei
 includes template authoring, and browser includes every `browser_*` tool.
 SecLists and rockyou are required only by profiles that use them.
-`HERCULES_DISABLED_TOOLS` can independently hide an installed tool, but it
+`SATURNX_DISABLED_TOOLS` can independently hide an installed tool, but it
 cannot add a binary omitted from the image.
 
-## How Hercules works
+## How SaturnX works
 
-1. The MCP client starts the absolute `hercules` STDIO launcher.
-2. Hercules exposes tool and resource schemas immediately while one shared,
+1. The MCP client starts the absolute `saturnx` STDIO launcher.
+2. SaturnX exposes tool and resource schemas immediately while one shared,
    shielded Docker bootstrap task continues in the background.
 3. Docker-backed calls wait for core readiness; Metasploit can continue
    initializing independently after ordinary tools become usable.
@@ -129,10 +129,10 @@ cannot add a binary omitted from the image.
 6. Results are parsed and bounded while complete evidence is retained in the
    workspace when necessary.
 
-If core initialization is still running after a bounded tool wait, Hercules
+If core initialization is still running after a bounded tool wait, SaturnX
 returns `runtime_initializing` without closing MCP. A deterministic startup
 failure returns `runtime_unavailable` while host-side schemas and resources
-remain accessible. On restart, Hercules reclaims only containers proven stale
+remain accessible. On restart, SaturnX reclaims only containers proven stale
 by their exact owner PID and creation time, project identity, and workspace
 identity; unrelated or live instances are preserved.
 
@@ -152,7 +152,7 @@ The optional browser image combines
 [agent-browser](https://github.com/vercel-labs/agent-browser) with
 [CloakBrowser](https://github.com/CloakHQ/cloakbrowser). CloakBrowser source is
 not bundled in this repository and is not needed on the host for normal
-Hercules use. The supported image installs the official PyPI
+SaturnX use. The supported image installs the official PyPI
 [`cloakbrowser`](https://pypi.org/project/cloakbrowser/) wheel at exact version
 `0.5.3`, verifies its SHA-256, and installs its managed Chromium binary.
 
@@ -171,13 +171,13 @@ browser while claiming CloakBrowser behavior.
   and credentials are redacted from responses and logs.
 - When a proxy is active, non-proxied WebRTC UDP is blocked by default.
 - Changes to proxy, locale, or timezone relaunch that session transactionally.
-- In bridge mode, browser `localhost` is inside the Hercules container. Use
+- In bridge mode, browser `localhost` is inside the SaturnX container. Use
   `host.docker.internal` for a service on the Docker engine host; a remote
   Docker context therefore reaches the remote engine rather than this computer.
 
 Docker does not provide residential or ISP egress; direct container traffic
 normally shares the host's public IP. CloakBrowser reduces common automation
-signals, but Hercules cannot guarantee CAPTCHA or bot-detection avoidance.
+signals, but SaturnX cannot guarantee CAPTCHA or bot-detection avoidance.
 
 Use structured browser tools first. `browser_cmd` is an administrator escape
 hatch for supported advanced controller operations and sits outside structured
@@ -185,7 +185,7 @@ target guarantees. Load `browser_skill` before using it.
 
 ## Output, artifacts, sessions, and workspaces
 
-Hercules optimizes output for agents without treating discarded text as
+SaturnX optimizes output for agents without treating discarded text as
 evidence:
 
 - terminal controls and exact known banners are removed conservatively;
@@ -202,20 +202,20 @@ reads support `offset` and `max_bytes` paging.
 
 Workspace paths reject traversal, alternate drives, device paths, and symlink
 or reparse-point escapes. Evidence retention is disabled by default; non-empty
-evidence is never silently deleted. `hercules-workspace` exposes list, pin,
+evidence is never silently deleted. `saturnx-workspace` exposes list, pin,
 unpin, prune, and migrate operations. Pruning is report-only without `--apply`
 and protects active, pinned, unowned, and running-job sessions. Migration stages
 and verifies the copy, retaining the source unless deletion is explicit.
 
 ## MCP resources and agent guidance
 
-The canonical [`hercules-mcp` skill](skills/hercules-mcp/SKILL.md) is installed
+The canonical [`saturnx-mcp` skill](skills/saturnx-mcp/SKILL.md) is installed
 independently of native plugins. Plugin manifests contain MCP adapter metadata
 only; they do not embed, copy, or declare a skill. Progressive references teach
 tool selection, parameters, bounded parallelism, output interpretation,
 artifacts, and recovery without bloating the always-on MCP context.
 
-Hercules exposes seven resources:
+SaturnX exposes seven resources:
 
 | Resource | Use it when |
 | --- | --- |
@@ -233,7 +233,7 @@ Enumeration findings are evidence to verify, not permission to exploit.
 
 ## Setup facts and client configuration
 
-`hercules --setup-info-json` is a strictly read-only information surface for
+`saturnx --setup-info-json` is a strictly read-only information surface for
 installation agents. Optional selectors let an agent normalize a capability
 profile, inspect an existing non-secret state file, describe an approved custom
 CA bundle, or describe an exactly pinned replacement CloakBrowser wheel. Its
@@ -253,7 +253,7 @@ client, or update Docker. The active agent chooses suitable host-native actions
 from these facts and [install.md](install.md).
 
 Repository MCP files are templates and must be rendered before installation;
-their bare `hercules` command is never a finished registration. An effective
+their bare `saturnx` command is never a finished registration. An effective
 MCP entry needs an absolute launcher, no secrets, and the client's native
 120000 millisecond local-STDIO startup timeout when supported. Its exact JSON,
 JSONC, TOML, or CLI representation depends on the installed client:
@@ -261,8 +261,8 @@ JSONC, TOML, or CLI representation depends on the installed client:
 ```json
 {
   "mcpServers": {
-    "hercules": {
-      "command": "<absolute path to the managed hercules launcher>",
+    "saturnx": {
+      "command": "<absolute path to the managed saturnx launcher>",
       "args": []
     }
   }
@@ -275,16 +275,16 @@ honors `OPENCODE_CONFIG` and XDG paths,
 preserves JSONC comments, supports the installed client's direct or nested MCP
 layout, uses its current local-command form with an absolute command array and
 `timeout: 120000`, and places the independent skill at
-`.agents/skills/hercules-mcp`.
+`.agents/skills/saturnx-mcp`.
 
-Multiple coding agents and IDEs may connect at the same time. Hercules assigns
+Multiple coding agents and IDEs may connect at the same time. SaturnX assigns
 each live STDIO server a separate workspace session and, when defaults are busy,
 a collision-free runtime port set. Agents must call `system_network_info` in
 their own MCP session before choosing callback or listener ports; ports copied
 from another client may belong to a different container.
 
 If an IDE force-terminates its STDIO child, a detached guardian verifies the
-exact owner process identity and full Hercules labels before removing only that
+exact owner process identity and full SaturnX labels before removing only that
 client's container. Normal shutdown still performs synchronous cleanup; no
 broad Docker pruning is used.
 
@@ -293,17 +293,17 @@ Runtime values remain in the protected `.env`. See
 
 | Variable | Purpose |
 | --- | --- |
-| `HERCULES_INSTALLED_CAPABILITIES` | Agent-maintained capability selection |
-| `HERCULES_DISABLED_TOOLS` | Independently hide an installed MCP tool |
+| `SATURNX_INSTALLED_CAPABILITIES` | Agent-maintained capability selection |
+| `SATURNX_DISABLED_TOOLS` | Independently hide an installed MCP tool |
 | `ALLOWED_TARGETS` / `BLOCKED_TARGETS` | Structured target policy; deny rules win |
-| `HERCULES_WORKSPACE_ROOT` | Override the managed evidence root |
-| `HERCULES_WORDLIST_ROOT` | Reusable verified wordlist and extraction cache |
-| `HERCULES_BUILD_CA_SHA256` | Fingerprint of optional certificate-only build trust |
-| `HERCULES_IMAGE_PLATFORM` | Exact `linux/amd64` or `linux/arm64` runtime platform |
-| `HERCULES_CLOAKBROWSER_WHEEL_URL` | Exact PyPI artifact URL for a preserved browser pin |
-| `HERCULES_LISTENER_PORTS` | Explicit reverse-listener ports exposed by bridge networking |
+| `SATURNX_WORKSPACE_ROOT` | Override the managed evidence root |
+| `SATURNX_WORDLIST_ROOT` | Reusable verified wordlist and extraction cache |
+| `SATURNX_BUILD_CA_SHA256` | Fingerprint of optional certificate-only build trust |
+| `SATURNX_IMAGE_PLATFORM` | Exact `linux/amd64` or `linux/arm64` runtime platform |
+| `SATURNX_CLOAKBROWSER_WHEEL_URL` | Exact PyPI artifact URL for a preserved browser pin |
+| `SATURNX_LISTENER_PORTS` | Explicit reverse-listener ports exposed by bridge networking |
 | `MSF_RPC_PORT` | Loopback-only Metasploit RPC port (default `15553`) |
-| `HERCULES_AUTO_ALLOCATE_PORTS` | Select a collision-free runtime port set for concurrent clients (default `true`) |
+| `SATURNX_AUTO_ALLOCATE_PORTS` | Select a collision-free runtime port set for concurrent clients (default `true`) |
 | `BROWSER_PROXY_URL` | Default browser proxy kept outside client configuration |
 | `BROWSER_STREAM_PORT` | Optional loopback-only browser stream port |
 | `SKIP_METASPLOIT` | Omit the five Metasploit tools from an installed full profile |
@@ -332,7 +332,7 @@ bounded certificate-only PEM as a BuildKit secret and record only its SHA-256.
 Certificate/hostname verification must never be disabled, and certificate
 contents must not enter the checkout or state.
 
-Failed work must restore the last committed Hercules client entry and
+Failed work must restore the last committed SaturnX client entry and
 non-secret state. Checksum-valid downloads and immutable Docker cache may be
 reused. Existing workspaces, evidence, secrets, successful images, and unrelated
 client configuration must remain untouched.
@@ -342,13 +342,13 @@ client configuration must remain untouched.
 Key areas are:
 
 ```text
-hercules/
+saturnx/
 |-- main.py                  # FastMCP entrypoint and read-only setup mode
 |-- core/                    # Configuration, setup facts, workspaces, lifecycle, execution, jobs
 |-- output/                  # Rendering, filters, redaction, and truncation
 |-- tools/                   # Structured MCP tools, including browser operations
 `-- resources/               # MCP resources and embedded lite scripts
-skills/hercules-mcp/         # Canonical provider-neutral portable skill
+skills/saturnx-mcp/         # Canonical provider-neutral portable skill
 docker/entrypoint.sh         # Container readiness and loopback-only services
 Dockerfile                   # Deterministic capability-specific Kali image
 install.md                   # Agent-directed installation contract
@@ -375,12 +375,12 @@ it.
   allow/deny scopes before use in controlled environments.
 - `pymetasploit3` remains pinned despite
   [GHSA-qpc3-8vqg-8g6w](https://osv.dev/vulnerability/GHSA-qpc3-8vqg-8g6w)
-  because no fixed release exists. Hercules does not call the affected API and
+  because no fixed release exists. SaturnX does not call the affected API and
   rejects CR/LF in Metasploit option keys and values.
 
 ## Acknowledgements
 
-Hercules builds on
+SaturnX builds on
 [Kali Linux](https://www.kali.org/),
 [FastMCP](https://github.com/jlowin/fastmcp),
 [Metasploit Framework](https://www.metasploit.com/),
@@ -392,4 +392,4 @@ maintainers and contributors.
 
 ## License
 
-Hercules MCP is distributed under the [MIT License](LICENSE).
+SaturnX MCP is distributed under the [MIT License](LICENSE).

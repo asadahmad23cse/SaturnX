@@ -1,1 +1,0 @@
-"""Hercules MCP tool modules."""

@@ -1,14 +1,14 @@
 {
-  "name": "hercules-mcp",
-  "displayName": "Hercules MCP",
+  "name": "saturnx-mcp",
+  "displayName": "SaturnX MCP",
   "version": "0.1.0",
-  "description": "Route authorized security workflows through the local Hercules MCP server.",
+  "description": "Route authorized security workflows through the local SaturnX MCP server.",
   "author": {
     "name": "0xMihirK",
     "url": "https://github.com/0xMihirK"
   },
-  "homepage": "https://github.com/0xMihirK/hercules-mcp",
-  "repository": "https://github.com/0xMihirK/hercules-mcp",
+  "homepage": "https://github.com/asadahmad23cse/SaturnX",
+  "repository": "https://github.com/asadahmad23cse/SaturnX",
   "license": "MIT",
   "keywords": [
     "mcp",

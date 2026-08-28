@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Hercules Container Entrypoint
+# SaturnX Container Entrypoint
 #
 # Handles runtime setup that cannot be baked into the image:
 #   1. Verify the host-prepared wordlist mounts
@@ -8,39 +8,39 @@
 #   3. Publish the readiness marker and keep the container alive
 # =============================================================================
 
-echo "[hercules] Container starting..."
+echo "[saturnx] Container starting..."
 
 # ── 1. Verify prebuilt or host-prepared wordlists ───────────────────────────
 # Extraction happens once on the host. Only selected consumers require mounts.
-HERCULES_INSTALLED_CAPABILITIES="${HERCULES_INSTALLED_CAPABILITIES:-all}"
+SATURNX_INSTALLED_CAPABILITIES="${SATURNX_INSTALLED_CAPABILITIES:-all}"
 has_capability() {
-    [ "$HERCULES_INSTALLED_CAPABILITIES" = "all" ] ||
-        case ",$HERCULES_INSTALLED_CAPABILITIES," in
+    [ "$SATURNX_INSTALLED_CAPABILITIES" = "all" ] ||
+        case ",$SATURNX_INSTALLED_CAPABILITIES," in
             *",$1,"*) return 0 ;;
             *) return 1 ;;
         esac
 }
 if (has_capability hydra || has_capability john) &&
     [ ! -r /usr/share/wordlists/rockyou.txt ]; then
-    echo "[hercules] ERROR: selected cracking capabilities require rockyou.txt."
+    echo "[saturnx] ERROR: selected cracking capabilities require rockyou.txt."
     exit 1
 fi
 if has_capability fuzz && [ ! -d /usr/share/wordlists/seclists ]; then
-    echo "[hercules] ERROR: selected fuzz capability requires SecLists."
+    echo "[saturnx] ERROR: selected fuzz capability requires SecLists."
     exit 1
 fi
 if has_capability hydra || has_capability john || has_capability fuzz; then
-    echo "[hercules] Required wordlists are ready."
+    echo "[saturnx] Required wordlists are ready."
 else
-    echo "[hercules] Wordlists are not required by this capability profile."
+    echo "[saturnx] Wordlists are not required by this capability profile."
 fi
 
 # ── 2. Start Metasploit services asynchronously (unless skipped) ────────────
-# Core readiness is independent from PostgreSQL/msfrpcd. Hercules publishes its
+# Core readiness is independent from PostgreSQL/msfrpcd. SaturnX publishes its
 # MCP schemas immediately and the Metasploit tools already expose an explicit
 # initializing state while this function completes.
 start_metasploit() {
-    echo "[hercules] Starting PostgreSQL for Metasploit..."
+    echo "[saturnx] Starting PostgreSQL for Metasploit..."
 
     PG_STARTED=0
 
@@ -64,19 +64,19 @@ start_metasploit() {
     fi
 
     if [ "$PG_STARTED" -eq 1 ]; then
-        echo "[hercules] PostgreSQL started. Initializing msfdb..."
-        msfdb init 2>/dev/null || echo "[hercules] msfdb init had warnings (non-fatal)."
+        echo "[saturnx] PostgreSQL started. Initializing msfdb..."
+        msfdb init 2>/dev/null || echo "[saturnx] msfdb init had warnings (non-fatal)."
     else
-        echo "[hercules] WARNING: PostgreSQL could not be started. MSF will run without DB."
+        echo "[saturnx] WARNING: PostgreSQL could not be started. MSF will run without DB."
     fi
 
     if [ -z "${MSF_PASSWORD:-}" ]; then
-        echo "[hercules] ERROR: MSF_PASSWORD was not provided."
+        echo "[saturnx] ERROR: MSF_PASSWORD was not provided."
         return 1
     fi
     MSF_BIND_HOST="${MSF_BIND_HOST:-0.0.0.0}"
     MSF_RPC_PORT="${MSF_RPC_PORT:-15553}"
-    echo "[hercules] Starting msfrpcd on ${MSF_BIND_HOST}:${MSF_RPC_PORT}..."
+    echo "[saturnx] Starting msfrpcd on ${MSF_BIND_HOST}:${MSF_RPC_PORT}..."
     msfrpcd -P "$MSF_PASSWORD" -S -a "$MSF_BIND_HOST" -p "$MSF_RPC_PORT" &
 
     MSFRPCD_READY=0
@@ -90,26 +90,26 @@ start_metasploit() {
         sleep 1
     done
     if [ "$MSFRPCD_READY" -ne 1 ]; then
-        echo "[hercules] ERROR: msfrpcd did not listen on port ${MSF_RPC_PORT} within 60 seconds."
+        echo "[saturnx] ERROR: msfrpcd did not listen on port ${MSF_RPC_PORT} within 60 seconds."
         return 1
     fi
-    echo "[hercules] Metasploit services started."
+    echo "[saturnx] Metasploit services started."
 }
 
 if [ "${SKIP_METASPLOIT}" != "true" ]; then
     start_metasploit &
-    echo "[hercules] Metasploit initialization continues in the background."
+    echo "[saturnx] Metasploit initialization continues in the background."
 else
-    echo "[hercules] Metasploit skipped (SKIP_METASPLOIT=true)."
+    echo "[saturnx] Metasploit skipped (SKIP_METASPLOIT=true)."
 fi
 
 # ── Stealth browser (cloakbrowser + agent-browser) ──────────────────────────
 # Intentionally NOT started here. The cloakserve stealth-Chromium backend is
 # launched lazily on the first browser_* MCP tool call (see
-# hercules/tools/browser/browser_tool.py::_resolve_cloak) so non-browser
+# saturnx/tools/browser/browser_tool.py::_resolve_cloak) so non-browser
 # sessions never pay the Chromium spin-up cost. Browser sessions are always
 # headless; screenshots and the loopback stream relay remain available.
 
-touch /tmp/hercules-ready
-echo "[hercules] Core container ready. Sleeping..."
+touch /tmp/saturnx-ready
+echo "[saturnx] Core container ready. Sleeping..."
 exec sleep infinity

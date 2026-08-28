@@ -3,7 +3,7 @@ requires = ["hatchling>=1.27,<2"]
 build-backend = "hatchling.build"
 
 [project]
-name = "hercules-mcp"
+name = "saturnx-mcp"
 version = "0.1.0"
 description = "Offensive Security MCP Server for AI Agents"
 readme = "README.md"
@@ -13,7 +13,7 @@ dependencies = [
     "fastmcp>=3.4.5,<4",
     "mcp>=1.29,<2",
     "docker>=7.1,<8",
-    # No fixed upstream release exists for GHSA-qpc3-8vqg-8g6w. Hercules does
+    # No fixed upstream release exists for GHSA-qpc3-8vqg-8g6w. SaturnX does
     # not call the affected run_module_with_output API and rejects CR/LF in all
     # option keys/values before RPC dispatch.
     "pymetasploit3==1.0.6",
@@ -28,8 +28,8 @@ dev = [
 ]
 
 [project.scripts]
-hercules = "hercules.main:main"
-hercules-workspace = "hercules.workspace_cli:main"
+saturnx = "saturnx.main:main"
+saturnx-workspace = "saturnx.workspace_cli:main"
 
 [tool.hatch.build]
 # The acceptance suite and CI experiments are intentionally local-only.
@@ -41,27 +41,27 @@ exclude = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["hercules"]
+packages = ["saturnx"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"skills/hercules-mcp" = "hercules/_bundled_skill/hercules-mcp"
-"install.md" = "hercules/_bundled_install.md"
-".codex-plugin" = "hercules/_bundled_plugin/.codex-plugin"
-".claude-plugin" = "hercules/_bundled_plugin/.claude-plugin"
-".cursor-plugin" = "hercules/_bundled_plugin/.cursor-plugin"
-".mcp.json" = "hercules/_bundled_plugin/.mcp.json"
-"mcp.json" = "hercules/_bundled_plugin/mcp.json"
-"hercules-mcp.json" = "hercules/_bundled_plugin/hercules-mcp.json"
+"skills/saturnx-mcp" = "saturnx/_bundled_skill/saturnx-mcp"
+"install.md" = "saturnx/_bundled_install.md"
+".codex-plugin" = "saturnx/_bundled_plugin/.codex-plugin"
+".claude-plugin" = "saturnx/_bundled_plugin/.claude-plugin"
+".cursor-plugin" = "saturnx/_bundled_plugin/.cursor-plugin"
+".mcp.json" = "saturnx/_bundled_plugin/.mcp.json"
+"mcp.json" = "saturnx/_bundled_plugin/mcp.json"
+"saturnx-mcp.json" = "saturnx/_bundled_plugin/saturnx-mcp.json"
 
 [tool.hatch.build.targets.sdist.force-include]
-"skills/hercules-mcp" = "skills/hercules-mcp"
+"skills/saturnx-mcp" = "skills/saturnx-mcp"
 "install.md" = "install.md"
 ".codex-plugin" = ".codex-plugin"
 ".claude-plugin" = ".claude-plugin"
 ".cursor-plugin" = ".cursor-plugin"
 ".mcp.json" = ".mcp.json"
 "mcp.json" = "mcp.json"
-"hercules-mcp.json" = "hercules-mcp.json"
+"saturnx-mcp.json" = "saturnx-mcp.json"
 
 [tool.ruff.lint]
 # MCP, Docker, RPC, and setup-information entrypoints normalize heterogeneous

@@ -299,7 +299,7 @@ decorator==5.3.1 \
 defusedxml==0.7.1 \
     --hash=sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69 \
     --hash=sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61
-    # via hercules-mcp
+    # via saturnx-mcp
 dnspython==2.8.0 \
     --hash=sha256:01d9bbc4a2d76bf0db7c1f729812ded6d912bd318d3b1cf81d30c0f845dbf3af \
     --hash=sha256:181d3c6996452cb1189c4046c61599b84a5a86e099562ffde77d26984ff26d0f
@@ -307,7 +307,7 @@ dnspython==2.8.0 \
 docker==7.2.0 \
     --hash=sha256:a3f45fdeb9165e2d25d9a1d02ddf3bc70fb572cf5ebbf9b58558c22caf29b71f \
     --hash=sha256:cebb93773d334f778e023a7ee352a8d6e13ab1bd3b863a4d4a59dec897df43ac
-    # via hercules-mcp
+    # via saturnx-mcp
 docstring-parser==0.18.0 \
     --hash=sha256:292510982205c12b1248696f44959db3cdd1740237a968ea1e2e7a900eeb2015 \
     --hash=sha256:b3fcbed555c47d8479be0796ef7e19c2670d428d72e96da63f3a40122860374b
@@ -323,7 +323,7 @@ exceptiongroup==1.3.1 \
 fastmcp==3.4.5 \
     --hash=sha256:5d3d438eb2917e63e6faf53e8cb8fe26d887ec3232f848093a4eecad7fa34861 \
     --hash=sha256:a95f2bc876bef42e8b50f7872f24f3f2fe3b1d37408c734e8b9d9e03014b72d3
-    # via hercules-mcp
+    # via saturnx-mcp
 fastmcp-slim==3.4.5 \
     --hash=sha256:5badc3bceee61f61297eeb9494f499325f3ce1cafabf4611b31f6c3e9d7dff59 \
     --hash=sha256:bc31217827c4999812543c83ee95ed9a47f3ed1e3fd0bd4f64371e375b748eca
@@ -347,7 +347,7 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   fastmcp-slim
-    #   hercules-mcp
+    #   saturnx-mcp
     #   mcp
 httpx-sse==0.4.3 \
     --hash=sha256:0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc \
@@ -418,7 +418,7 @@ mcp==1.29.0 \
     --hash=sha256:f5a075bb611f23d6f4d080c6a1699fa62772eebc562ba9e66b306ddde1c755f7
     # via
     #   fastmcp-slim
-    #   hercules-mcp
+    #   saturnx-mcp
 mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
@@ -639,7 +639,7 @@ pyjwt==2.13.0 \
     # via mcp
 pymetasploit3==1.0.6 \
     --hash=sha256:cb8601428eaf6befcd12e13e0967ae7a8d1a1081c49c465806bd561fdd2a1f14
-    # via hercules-mcp
+    # via saturnx-mcp
 pyperclip==1.11.0 \
     --hash=sha256:244035963e4428530d9e3a6101a1ef97209c6825edab1567beac148ccc1db1b6 \
     --hash=sha256:299403e9ff44581cb9ba2ffeed69c7aa96a008622ad0c46cb575ca75b5b84273
@@ -649,7 +649,7 @@ python-dotenv==1.2.2 \
     --hash=sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3
     # via
     #   fastmcp-slim
-    #   hercules-mcp
+    #   saturnx-mcp
     #   pydantic-settings
 python-multipart==0.0.32 \
     --hash=sha256:be54b7f3fa167bb83e4fcd936b887b708f4e57fe75911c02aebf53efaf8d938e \

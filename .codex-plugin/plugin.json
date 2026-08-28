@@ -1,13 +1,13 @@
 {
-  "name": "hercules-mcp",
+  "name": "saturnx-mcp",
   "version": "0.1.0",
-  "description": "Route authorized security workflows through the local Hercules MCP server.",
+  "description": "Route authorized security workflows through the local SaturnX MCP server.",
   "author": {
     "name": "0xMihirK",
     "url": "https://github.com/0xMihirK"
   },
-  "homepage": "https://github.com/0xMihirK/hercules-mcp",
-  "repository": "https://github.com/0xMihirK/hercules-mcp",
+  "homepage": "https://github.com/asadahmad23cse/SaturnX",
+  "repository": "https://github.com/asadahmad23cse/SaturnX",
   "license": "MIT",
   "keywords": [
     "mcp",
@@ -18,15 +18,15 @@
   ],
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "Hercules MCP",
+    "displayName": "SaturnX MCP",
     "shortDescription": "Authorized security workflows through Kali",
-    "longDescription": "A local MCP server for authorized Hercules reconnaissance, scanning, browser, exploitation, password, CTF, and evidence workflows.",
+    "longDescription": "A local MCP server for authorized SaturnX reconnaissance, scanning, browser, exploitation, password, CTF, and evidence workflows.",
     "developerName": "0xMihirK",
     "category": "Productivity",
     "capabilities": [],
     "defaultPrompt": [
-      "Assess this authorized target with Hercules.",
-      "Choose the safest effective Hercules workflow.",
+      "Assess this authorized target with SaturnX.",
+      "Choose the safest effective SaturnX workflow.",
       "Validate this finding and preserve evidence."
     ]
   }
