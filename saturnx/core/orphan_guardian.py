@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from pathlib import Path
 
 from docker.errors import APIError, DockerException, NotFound
 
@@ -39,6 +40,7 @@ def guard(
     project_hash: str,
     workspace_hash: str,
     instance_id: str,
+    cleanup_signal: str = "",
 ) -> int:
     """Remove one exactly labeled container after its exact owner disappears."""
     expected = {
@@ -49,8 +51,13 @@ def guard(
         "saturnx.owner_pid": str(owner_pid),
         "saturnx.owner_start_token": owner_start_token,
     }
-    while _owner_is_live(owner_pid, owner_start_token):
-        time.sleep(2)
+    signal_path = Path(cleanup_signal) if cleanup_signal else None
+    while _owner_is_live(owner_pid, owner_start_token) and not (
+        signal_path is not None and signal_path.is_file()
+    ):
+        # Graceful STDIO shutdown windows can be only a few seconds. Keep the
+        # signal response prompt while the exact-owner checks remain cheap.
+        time.sleep(0.25 if signal_path is not None else 2)
 
     # Docker Desktop may be restarting at exactly the same time as the client.
     # Retry for two minutes, but never broaden ownership or container selection.
@@ -69,8 +76,12 @@ def guard(
                 # A stopped container has already released its host ports.
                 pass
             container.remove(force=True)
+            if signal_path is not None:
+                signal_path.unlink(missing_ok=True)
             return 0
         except NotFound:
+            if signal_path is not None:
+                signal_path.unlink(missing_ok=True)
             return 0
         except DockerException:
             time.sleep(2)
@@ -85,6 +96,7 @@ def main() -> int:
     parser.add_argument("--project-hash", required=True)
     parser.add_argument("--workspace-hash", required=True)
     parser.add_argument("--instance-id", required=True)
+    parser.add_argument("--cleanup-signal", default="")
     args = parser.parse_args()
     return guard(
         container_id=args.container_id,
@@ -93,6 +105,7 @@ def main() -> int:
         project_hash=args.project_hash,
         workspace_hash=args.workspace_hash,
         instance_id=args.instance_id,
+        cleanup_signal=args.cleanup_signal,
     )
 
 
