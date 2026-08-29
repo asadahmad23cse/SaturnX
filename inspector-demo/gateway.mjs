@@ -1,5 +1,6 @@
 import http from "node:http";
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -13,6 +14,15 @@ import {
 
 const directory = dirname(fileURLToPath(import.meta.url));
 const publicPort = Number.parseInt(process.env.PORT || "10000", 10);
+
+// Our own static demo page, not the official Inspector web client. The
+// Inspector process below is used purely for its backend MCP-bridging
+// routes (/api/mcp/connect, /send, /events) — its own bundled frontend is
+// never proxied to visitors. (v2.4.0's toggle-driven connect flow reloads
+// the page and reports "Failed" in this ad-hoc --config mode even though
+// the underlying session succeeds; verified independently against the raw
+// API. Serving our own page sidesteps that upstream regression entirely.)
+const indexHtml = readFileSync(join(directory, "public", "index.html"));
 const inspectorPort = 6274;
 const remoteUrl = process.env.SATURNX_REMOTE_MCP_URL || "https://saturnx-mcp.onrender.com/mcp";
 const bearerToken = process.env.SATURNX_DEMO_BEARER_TOKEN || "";
@@ -143,13 +153,6 @@ function proxyRequest(request, response, bodyOverride) {
   else request.pipe(upstream);
 }
 
-const safeGetPaths = new Set([
-  "/api/config",
-  "/api/servers",
-  "/api/servers/events",
-  "/api/storage/client",
-]);
-
 const server = http.createServer(async (request, response) => {
   try {
     const requestUrl = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
@@ -162,18 +165,26 @@ const server = http.createServer(async (request, response) => {
         access: "read-only",
       });
     }
+
+    // Our own page, served directly — never proxied to the Inspector's
+    // bundled (and, in this mode, buggy) frontend.
+    if (pathname === "/" && (request.method === "GET" || request.method === "HEAD")) {
+      response.writeHead(200, {
+        "content-type": "text/html; charset=utf-8",
+        "content-length": indexHtml.length,
+        "cache-control": "no-store",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      });
+      return response.end(request.method === "HEAD" ? undefined : indexHtml);
+    }
+
     if (!inspectorReady) return jsonResponse(response, 503, { error: "Inspector is starting." });
 
     if (!pathname.startsWith("/api/")) {
-      if (request.method !== "GET" && request.method !== "HEAD") {
-        return jsonResponse(response, 405, { error: "Method not allowed." });
-      }
-      return proxyRequest(request, response);
+      return jsonResponse(response, 404, { error: "Not found." });
     }
 
-    if (request.method === "GET" && safeGetPaths.has(pathname)) {
-      return proxyRequest(request, response);
-    }
     if (request.method === "GET" && isSafeEventPath(pathname, requestUrl.searchParams)) {
       return proxyRequest(request, response);
     }

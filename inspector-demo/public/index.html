@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SaturnX MCP — Live Read-Only Demo</title>
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#111726; --panel2:#0e1420; --stroke:#232c42;
+    --ink:#e8ecf5; --muted:#8a94ad; --orange1:#ff9a3c; --orange2:#f2611d;
+    --green:#5fd98a; --red:#ff6b6b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:radial-gradient(120% 120% at 50% 0%, #0d1424 0%, #070a12 60%);
+    color:var(--ink); font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  header{
+    max-width:920px; margin:0 auto; padding:48px 24px 24px; text-align:center;
+  }
+  .logo{width:64px; height:64px; margin:0 auto 16px;}
+  h1{font-size:28px; margin:0 0 8px; font-weight:700;}
+  .sub{color:var(--muted); font-size:15px; max-width:640px; margin:0 auto; line-height:1.5;}
+  .badge{
+    display:inline-flex; align-items:center; gap:6px; margin-top:16px;
+    background:rgba(255,154,60,0.1); border:1px solid rgba(255,154,60,0.3);
+    color:var(--orange1); font-size:12.5px; font-weight:600; padding:6px 12px; border-radius:999px;
+  }
+  main{max-width:920px; margin:0 auto; padding:0 24px 64px;}
+  .card{
+    background:linear-gradient(180deg,#131a2b,#0e1420); border:1px solid var(--stroke);
+    border-radius:16px; padding:24px; margin-bottom:20px; box-shadow:0 8px 30px rgba(0,0,0,.3);
+  }
+  .status-row{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--muted); flex-shrink:0;}
+  .dot.ok{background:var(--green); box-shadow:0 0 8px var(--green);}
+  .dot.err{background:var(--red); box-shadow:0 0 8px var(--red);}
+  .dot.pending{background:var(--orange1); animation:pulse 1.2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  #statusText{font-size:14px; color:var(--muted);}
+  h2{font-size:15px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 16px; font-weight:600;}
+  .tools-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:12px;}
+  .tool{
+    background:var(--panel2); border:1px solid var(--stroke); border-radius:12px; padding:14px 16px;
+  }
+  .tool-name{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; color:var(--orange1); font-weight:600; margin-bottom:6px;}
+  .tool-desc{font-size:13px; color:var(--muted); line-height:1.45; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;}
+  .skeleton{background:linear-gradient(90deg, var(--panel2) 25%, #1a2338 37%, var(--panel2) 63%); background-size:400% 100%; animation:shimmer 1.4s infinite;}
+  @keyframes shimmer{0%{background-position:100% 0;}100%{background-position:0 0;}}
+  .skel-card{height:74px; border-radius:12px;}
+  button{
+    background:linear-gradient(135deg,var(--orange1),var(--orange2)); color:#1a0e02; border:none;
+    font-weight:700; font-size:14px; padding:11px 20px; border-radius:10px; cursor:pointer;
+    transition:transform .15s, box-shadow .15s;
+  }
+  button:hover:not(:disabled){transform:translateY(-1px); box-shadow:0 6px 18px rgba(242,97,29,.35);}
+  button:disabled{opacity:.5; cursor:not-allowed;}
+  .demo-desc{font-size:13.5px; color:var(--muted); line-height:1.55; margin-bottom:16px;}
+  pre{
+    background:var(--panel2); border:1px solid var(--stroke); border-radius:10px; padding:14px 16px;
+    font-size:12.5px; line-height:1.6; overflow-x:auto; color:#c9d2e6; margin:0;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+  }
+  pre .blocked{color:var(--red); font-weight:700;}
+  pre .ok{color:var(--green); font-weight:700;}
+  footer{text-align:center; color:var(--muted); font-size:12.5px; padding:24px; border-top:1px solid var(--stroke);}
+  footer a{color:var(--orange1); text-decoration:none;}
+  .err-box{color:var(--red); font-size:13.5px; background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); border-radius:10px; padding:12px 14px;}
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="logo" viewBox="0 0 2048 2048" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="p" cx="42%" cy="38%" r="70%">
+        <stop offset="0%" stop-color="#ffd9a0"/><stop offset="38%" stop-color="#ff9a3c"/>
+        <stop offset="72%" stop-color="#f2611d"/><stop offset="100%" stop-color="#c23b0e"/>
+      </radialGradient>
+      <linearGradient id="rf" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffe0b0"/><stop offset="50%" stop-color="#ff8a2a"/><stop offset="100%" stop-color="#e04d12"/></linearGradient>
+      <linearGradient id="rb" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#b8480f"/><stop offset="100%" stop-color="#7a2b08"/></linearGradient>
+    </defs>
+    <g transform="rotate(-24 1024 1024)"><path d="M 1024 700 a 620 210 0 0 0 0 648" fill="none" stroke="url(#rb)" stroke-width="70" stroke-linecap="round"/></g>
+    <circle cx="1024" cy="1024" r="430" fill="url(#p)"/>
+    <ellipse cx="1024" cy="1120" rx="410" ry="46" fill="#7a2b08" opacity="0.18"/>
+    <circle cx="880" cy="880" r="150" fill="#fff" opacity="0.18"/>
+    <g transform="rotate(-24 1024 1024)"><path d="M 1024 1348 a 620 210 0 0 0 0 -648" fill="none" stroke="url(#rf)" stroke-width="70" stroke-linecap="round"/></g>
+    <g stroke="#fff2e0" stroke-width="66" stroke-linecap="round"><line x1="1298" y1="1300" x2="1470" y2="1472"/><line x1="1470" y1="1300" x2="1298" y2="1472"/></g>
+  </svg>
+  <h1>SaturnX MCP — Live Read-Only Demo</h1>
+  <p class="sub">This page connects to a live SaturnX MCP server and lists its real tool catalog over the Model Context Protocol. Every tool-execution attempt is rejected server-side — this is a discovery-only credential, by design.</p>
+  <div class="badge">🔒 Read-only session — no target is ever contacted</div>
+</header>
+
+<main>
+  <div class="card">
+    <div class="status-row">
+      <span id="statusDot" class="dot pending"></span>
+      <span id="statusText">Connecting to saturnx-mcp.onrender.com…</span>
+    </div>
+  </div>
+
+  <div class="card" id="toolsCard">
+    <h2 id="toolsHeading">Tool Catalog</h2>
+    <div id="toolsGrid" class="tools-grid">
+      <div class="skeleton skel-card"></div>
+      <div class="skeleton skel-card"></div>
+      <div class="skeleton skel-card"></div>
+      <div class="skeleton skel-card"></div>
+      <div class="skeleton skel-card"></div>
+      <div class="skeleton skel-card"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Try Executing a Tool</h2>
+    <p class="demo-desc">This attempts a real <code>tools/call</code> using this session's credential. It's rejected right here by this gateway's read-only method allowlist — and even if that layer were bypassed, SaturnX's own server-side middleware independently refuses to execute anything for a read-only-scoped token.</p>
+    <button id="tryBtn" disabled>Attempt tool_call</button>
+    <div id="tryResult" style="margin-top:14px;"></div>
+  </div>
+</main>
+
+<footer>
+  Backed by a live <a href="https://github.com/asadahmad23cse/SaturnX" target="_blank" rel="noopener">SaturnX MCP</a> instance over the real Model Context Protocol · streamable-http
+</footer>
+
+<script>
+(function () {
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const toolsGrid = document.getElementById('toolsGrid');
+  const toolsHeading = document.getElementById('toolsHeading');
+  const tryBtn = document.getElementById('tryBtn');
+  const tryResult = document.getElementById('tryResult');
+
+  let sessionId = null;
+  let es = null;
+  let msgId = 1;
+  const pending = new Map();
+  let firstToolName = null;
+
+  function setStatus(kind, text) {
+    statusDot.className = 'dot ' + kind;
+    statusText.textContent = text;
+  }
+
+  function rpc(method, params) {
+    const id = msgId++;
+    return new Promise((resolve, reject) => {
+      pending.set(id, { resolve, reject });
+      fetch('/api/mcp/send', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ sessionId, message: { jsonrpc: '2.0', id, method, params: params || {} } }),
+      }).then(async (res) => {
+        // A non-2xx here means this gateway's own read-only method allowlist
+        // rejected the call before it ever reached the real MCP session —
+        // the first of two independent layers. Surface that immediately
+        // instead of waiting on a response that will never arrive.
+        if (!res.ok && pending.has(id)) {
+          pending.delete(id);
+          let detail = 'HTTP ' + res.status;
+          try { detail = (await res.json()).error || detail; } catch {}
+          reject(new Error('Blocked by gateway policy: ' + detail));
+        }
+      }).catch((err) => {
+        if (pending.has(id)) { pending.delete(id); reject(err); }
+      });
+      setTimeout(() => {
+        if (pending.has(id)) {
+          pending.delete(id);
+          reject(new Error('Timed out waiting for a response.'));
+        }
+      }, 15000);
+    });
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  }
+
+  function renderTools(tools) {
+    if (!tools || tools.length === 0) {
+      toolsGrid.innerHTML = '<div class="err-box">No tools were returned.</div>';
+      return;
+    }
+    firstToolName = tools[0].name;
+    toolsHeading.textContent = 'Tool Catalog — ' + tools.length + ' tools';
+    toolsGrid.innerHTML = tools.map((t) => `
+      <div class="tool">
+        <div class="tool-name">${esc(t.name)}</div>
+        <div class="tool-desc">${esc(t.description || 'No description provided.')}</div>
+      </div>
+    `).join('');
+    tryBtn.disabled = false;
+  }
+
+  async function start() {
+    try {
+      const connectRes = await fetch('/api/mcp/connect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+      if (!connectRes.ok) throw new Error('connect failed: ' + connectRes.status);
+      const data = await connectRes.json();
+      sessionId = data.sessionId;
+
+      es = new EventSource('/api/mcp/events?sessionId=' + encodeURIComponent(sessionId));
+      es.addEventListener('message', (e) => {
+        let payload;
+        try { payload = JSON.parse(e.data); } catch { return; }
+        const msg = payload && payload.data ? payload.data : payload;
+        if (!msg || typeof msg.id === 'undefined') return;
+        const waiter = pending.get(msg.id);
+        if (waiter) {
+          pending.delete(msg.id);
+          if (msg.error) waiter.reject(new Error(msg.error.message || 'RPC error'));
+          else waiter.resolve(msg.result);
+        }
+      });
+      es.onerror = () => {
+        if (!sessionId) setStatus('err', 'Connection lost.');
+      };
+
+      await new Promise((r) => setTimeout(r, 250));
+
+      setStatus('pending', 'Handshaking (MCP initialize)…');
+      await rpc('initialize', {
+        protocolVersion: '2025-06-18',
+        capabilities: {},
+        clientInfo: { name: 'saturnx-demo-page', version: '1.0' },
+      });
+
+      setStatus('pending', 'Listing tools…');
+      const toolsResult = await rpc('tools/list', {});
+      renderTools(toolsResult.tools || []);
+
+      setStatus('ok', 'Connected — read-only session live');
+    } catch (err) {
+      setStatus('err', 'Could not connect: ' + err.message);
+      toolsGrid.innerHTML = '<div class="err-box">Failed to load the tool catalog. The server may be waking from idle — try reloading in a few seconds.</div>';
+    }
+  }
+
+  tryBtn.addEventListener('click', async () => {
+    tryBtn.disabled = true;
+    tryResult.innerHTML = '<pre>Sending tools/call for "' + esc(firstToolName) + '"…</pre>';
+    try {
+      const result = await rpc('tools/call', { name: firstToolName, arguments: {} });
+      const isBlocked = result && result.isError && result.structuredContent && result.structuredContent.error_type === 'read_only_demo';
+      tryResult.innerHTML = '<pre>' + (isBlocked ? '<span class="blocked">✗ BLOCKED (as expected)</span>\n\n' : '') + esc(JSON.stringify(result, null, 2)) + '</pre>';
+    } catch (err) {
+      tryResult.innerHTML = '<pre><span class="blocked">✗ BLOCKED</span>\n\n' + esc(err.message) + '</pre>';
+    } finally {
+      tryBtn.disabled = false;
+    }
+  });
+
+  start();
+})();
+</script>
+</body>
+</html>

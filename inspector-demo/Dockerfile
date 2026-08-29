@@ -9,6 +9,7 @@ COPY inspector-demo/package.json inspector-demo/package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY inspector-demo/gateway.mjs inspector-demo/policy.mjs inspector-demo/inspector.json ./
+COPY inspector-demo/public ./public
 
 USER node
 EXPOSE 10000
