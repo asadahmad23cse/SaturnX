@@ -15,7 +15,20 @@ test("connect configuration is fixed and receives the server-side token", () => 
   const payload = buildConnectPayload("https://saturnx-mcp.onrender.com/mcp", "demo-token");
   assert.equal(payload.config.type, "streamable-http");
   assert.equal(payload.config.url, "https://saturnx-mcp.onrender.com/mcp");
-  assert.equal(payload.config.headers.Authorization, "Bearer demo-token");
+  assert.equal(payload.config.headers, undefined);
+  assert.deepEqual(payload.settings.headers, [
+    { key: "Authorization", value: "Bearer demo-token" },
+  ]);
+  // Every field InspectorServerSettings requires (2.4.0) must be present,
+  // or the real Inspector's /api/mcp/connect throws before ever reaching
+  // our target server.
+  for (const key of [
+    "headers", "env", "metadata", "connectionTimeout", "requestTimeout",
+    "taskTtl", "autoRefreshOnListChanged", "paginatedLists",
+    "maxFetchRequests", "roots",
+  ]) {
+    assert.ok(key in payload.settings, `settings.${key} must be present`);
+  }
 });
 
 test("metadata requests pass without client-controlled headers", () => {

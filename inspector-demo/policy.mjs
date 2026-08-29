@@ -26,16 +26,26 @@ export function buildConnectPayload(remoteUrl, bearerToken) {
   if (!bearerToken || /[\r\n]/.test(bearerToken)) {
     throw new PolicyError("The read-only MCP credential is unavailable.", 503);
   }
+  // Matches core/mcp/types.ts's InspectorServerSettings (Inspector 2.4.0):
+  // every field below is required by that interface, and the bearer token
+  // is read from settings.headers (an array of {key,value} pairs) — NOT
+  // from config.headers, which StreamableHttpServerConfig doesn't define.
   return {
     config: {
       type: "streamable-http",
       url: target.toString(),
-      headers: { Authorization: `Bearer ${bearerToken}` },
     },
     settings: {
+      headers: [{ key: "Authorization", value: `Bearer ${bearerToken}` }],
+      env: [],
+      metadata: {},
       connectionTimeout: 60000,
       requestTimeout: 60000,
-      requestMaxTotalTimeout: 60000,
+      taskTtl: 60000,
+      autoRefreshOnListChanged: false,
+      paginatedLists: false,
+      maxFetchRequests: 1000,
+      roots: [],
     },
   };
 }
