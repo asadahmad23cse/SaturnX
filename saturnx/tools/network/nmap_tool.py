@@ -43,6 +43,11 @@ def register_nmap_tools(mcp: FastMCP) -> None:
         docker = ctx.lifespan_context["docker"]
         config = ctx.lifespan_context["config"]
         concurrency = ctx.lifespan_context["concurrency"]
+        nmap_prefix = (
+            "--unprivileged "
+            if getattr(docker, "requires_unprivileged_nmap", False)
+            else ""
+        )
 
         mode = (mode or "").lower()
 
@@ -59,7 +64,10 @@ def register_nmap_tools(mcp: FastMCP) -> None:
             except ValueError as exc:
                 return target_error("nmap_scan", target, exc, config)
             async with concurrency.acquire_light("nmap_quick_scan"):
-                cmd = f"nmap -T4 -F {extra_args} -oX - {shlex.quote(target)}"
+                cmd = (
+                    f"nmap {nmap_prefix}-T4 -F {extra_args} "
+                    f"-oX - {shlex.quote(target)}"
+                )
                 result = await docker.exec_command(
                     cmd.strip(),
                     timeout=120,
@@ -81,7 +89,15 @@ def register_nmap_tools(mcp: FastMCP) -> None:
             except ValueError as exc:
                 return target_error("nmap_scan", target, exc, config)
             async with concurrency.acquire_heavy("nmap_aggressive_scan"):
-                cmd = f"nmap -T4 -A -v {extra_args} -oX - {shlex.quote(target)}"
+                scan_args = (
+                    "-T4 -sT -sV --script=default -v"
+                    if nmap_prefix
+                    else "-T4 -A -v"
+                )
+                cmd = (
+                    f"nmap {nmap_prefix}{scan_args} {extra_args} "
+                    f"-oX - {shlex.quote(target)}"
+                )
                 result = await docker.exec_command(
                     cmd.strip(),
                     timeout=600,
@@ -117,7 +133,10 @@ def register_nmap_tools(mcp: FastMCP) -> None:
                     "error": "ports contains unsupported characters",
                 }
             async with concurrency.acquire_light("nmap_port_scan"):
-                cmd = f"nmap -p {shlex.quote(ports)} {extra_args} -oX - {shlex.quote(target)}"
+                cmd = (
+                    f"nmap {nmap_prefix}-p {shlex.quote(ports)} {extra_args} "
+                    f"-oX - {shlex.quote(target)}"
+                )
                 result = await docker.exec_command(
                     cmd.strip(),
                     timeout=300,
@@ -154,7 +173,8 @@ def register_nmap_tools(mcp: FastMCP) -> None:
                 }
             timeout_arg = "" if "--script-timeout" in extra_args else "--script-timeout 60s"
             cmd = (
-                f"nmap --script {shlex.quote(scripts)} {timeout_arg} {extra_args} "
+                f"nmap {nmap_prefix}--script {shlex.quote(scripts)} "
+                f"{timeout_arg} {extra_args} "
                 f"-oX - {shlex.quote(target)}"
             )
             async with concurrency.acquire_light("nmap_script_scan"):
@@ -177,7 +197,9 @@ def register_nmap_tools(mcp: FastMCP) -> None:
             wants_xml = "-oX -" in raw_args
             async with concurrency.acquire_light("nmap_custom_scan"):
                 kwargs = {"max_output_chars": 2_000_000, "preserve_raw": True} if wants_xml else {}
-                result = await docker.exec_command(f"nmap {raw_args}", timeout=600, **kwargs)
+                result = await docker.exec_command(
+                    f"nmap {nmap_prefix}{raw_args}", timeout=600, **kwargs
+                )
             return {"tool": "nmap_scan", "mode": mode, "raw_args": raw_args, **_format_result(result)}
 
         return selector_error(
@@ -222,6 +244,11 @@ def register_nmap_tools(mcp: FastMCP) -> None:
         docker = ctx.lifespan_context["docker"]
         config = ctx.lifespan_context["config"]
         concurrency = ctx.lifespan_context["concurrency"]
+        nmap_prefix = (
+            "--unprivileged "
+            if getattr(docker, "requires_unprivileged_nmap", False)
+            else ""
+        )
 
         try:
             await validate_target_async(config, target)
@@ -251,7 +278,7 @@ def register_nmap_tools(mcp: FastMCP) -> None:
                 "script_path": script_path,
             }
         cmd = (
-            f"nmap --script {shlex.quote(script_path)} {extra_args} "
+            f"nmap {nmap_prefix}--script {shlex.quote(script_path)} {extra_args} "
             f"-oX - {shlex.quote(target)}"
         )
 

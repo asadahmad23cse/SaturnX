@@ -36,6 +36,8 @@ logger = logging.getLogger("saturnx.embedded")
 class EmbeddedRuntimeManager(DockerManager):
     """Run SaturnX commands directly inside its hosted Kali service image."""
 
+    requires_unprivileged_nmap = True
+
     def __init__(self, config, *args, **kwargs) -> None:
         embedded_project_root = Path(
             os.getenv("SATURNX_EMBEDDED_PROJECT_ROOT", "/app")
