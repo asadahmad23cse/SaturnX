@@ -110,6 +110,21 @@ fi
 # sessions never pay the Chromium spin-up cost. Browser sessions are always
 # headless; screenshots and the loopback stream relay remain available.
 
+if [ "${SATURNX_RUNTIME_MODE:-docker}" = "embedded" ]; then
+    # Kali grants nmap file capabilities that include NET_ADMIN. Managed
+    # runtimes do not expose that capability in their bounding set, which makes
+    # Linux reject the binary before it starts. The hosted process runs as root,
+    # so removing the file capabilities keeps supported connect scans working.
+    if has_capability nmap && getcap /usr/lib/nmap/nmap 2>/dev/null | grep -q '='; then
+        setcap -r /usr/lib/nmap/nmap || {
+            echo "[saturnx] ERROR: could not prepare nmap for hosted execution."
+            exit 1
+        }
+    fi
+    touch /tmp/saturnx-ready
+    echo "[saturnx] Core container ready. Starting authenticated HTTP MCP server..."
+    exec saturnx
+fi
 touch /tmp/saturnx-ready
 echo "[saturnx] Core container ready. Sleeping..."
 exec sleep infinity

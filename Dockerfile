@@ -18,7 +18,6 @@ LABEL description="Selective tooling image for the SaturnX offensive security MC
 ENV DEBIAN_FRONTEND=noninteractive
 
 ARG SATURNX_CAPABILITIES=shell,session,workspace,dns,whois,amass,nmap,curl,ncat,hping3,whatweb,fuzz,webvuln,nuclei,sqlmap,searchsploit,metasploit,hydra,john,binwalk,steghide,browser
-ARG SATURNX_BUILD_FINGERPRINT=unknown
 ARG SATURNX_BUILD_CA_SHA256=
 ARG SATURNX_CAPABILITY_MANIFEST_SHA256=b6b85ee48c40298e79e2d42568a34d28cdbec6392df7be10cd16f2e5daaddbfb
 ARG TARGETPLATFORM
@@ -170,6 +169,17 @@ RUN set -eux; \
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
+# The same pinned Kali image can also host the authenticated HTTP MCP server.
+# Desktop mode ignores this installed package and continues to launch the image
+# as an isolated per-session tool runtime.
+WORKDIR /app
+COPY . /app
+RUN python3 -m pip install --no-cache-dir --require-hashes \
+        --break-system-packages -r requirements.txt && \
+    python3 -m pip install --no-cache-dir --no-deps \
+        --break-system-packages .
+
+ARG SATURNX_BUILD_FINGERPRINT=unknown
 LABEL saturnx.build_fingerprint="${SATURNX_BUILD_FINGERPRINT}"
 LABEL saturnx.capabilities="${SATURNX_CAPABILITIES}"
 LABEL saturnx.build_ca_sha256="${SATURNX_BUILD_CA_SHA256}"

@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: saturnx-mcp
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: SATURNX_RUNTIME_MODE
+        value: embedded
+      - key: SATURNX_TRANSPORT
+        value: http
+      - key: SATURNX_JWT_SECRET
+        sync: false
+      - key: SATURNX_CAPABILITIES
+        value: shell,session,workspace,dns,whois,nmap,curl
+      - key: SATURNX_INSTALLED_CAPABILITIES
+        value: shell,session,workspace,dns,whois,nmap,curl
+      - key: SKIP_METASPLOIT
+        value: "true"
+      - key: PRESERVE_CONTAINER
+        value: "false"
+      - key: SATURNX_WORKSPACE_ROOT
+        value: /var/lib/saturnx/sessions
+      - key: SATURNX_AUTO_ALLOCATE_PORTS
+        value: "false"
+      - key: SATURNX_LISTENER_PORTS
+        value: ""
+      - key: ALLOWED_TARGETS
+        value: localhost,127.0.0.1,::1
+      - key: WATCHDOG_INTERVAL
+        value: "30"
+      - key: SATURNX_WORKSPACE_AUTO_PRUNE
+        value: "true"
+      - key: SATURNX_WORKSPACE_RETENTION_DAYS
+        value: "7"
+      - key: SATURNX_WORKSPACE_MAX_SESSIONS
+        value: "20"
+      - key: SATURNX_WORKSPACE_MAX_BYTES
+        value: "209715200"
