@@ -15,6 +15,12 @@
   <img src="https://img.shields.io/badge/license-MIT-F57C00" alt="MIT license" />
 </p>
 
+<p align="center">
+  <a href="https://saturnx-inspector.onrender.com"><strong>Live read-only demo</strong></a>
+  — browse the real tool catalog of a running SaturnX instance; every
+  execution attempt is rejected server-side, so it's safe to click.
+</p>
+
 SaturnX MCP is a Python FastMCP server that gives terminal-capable AI agents a
 structured interface to security tools running in an owned Kali Docker
 container. It keeps evidence in managed host workspaces and returns bounded,
