@@ -14,13 +14,16 @@ import importlib
 import json
 import logging
 import logging.handlers
+import os
 import sys
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
 from fastmcp import FastMCP
+from fastmcp.server.auth.providers.jwt import JWTVerifier
 from fastmcp.server.lifespan import lifespan
+from starlette.responses import JSONResponse
 
 from saturnx.core.concurrency import ConcurrencyManager
 from saturnx.core.config import SaturnXConfig
@@ -285,7 +288,16 @@ async def _bootstrap_runtime(context: dict, services: RuntimeServices) -> None:
 async def docker_lifespan(server):
     """Manage the Kali Docker container lifecycle."""
     config = SaturnXConfig.from_env()
-    docker_mgr = DockerManager(
+    runtime_mode = os.getenv("SATURNX_RUNTIME_MODE", "docker").strip().lower()
+    if runtime_mode == "embedded":
+        from saturnx.core.embedded_runtime import EmbeddedRuntimeManager
+
+        manager_class = EmbeddedRuntimeManager
+    elif runtime_mode == "docker":
+        manager_class = DockerManager
+    else:
+        raise ValueError("SATURNX_RUNTIME_MODE must be 'docker' or 'embedded'")
+    docker_mgr = manager_class(
         config,
         instance_id=uuid.uuid4().hex,
         owns_instance_lock=False,
@@ -296,6 +308,7 @@ async def docker_lifespan(server):
 
     logger.info("=== SaturnX starting ===")
     logger.info("Session ID: %s", docker_mgr.session_id)
+    logger.info("Runtime mode: %s", runtime_mode)
     logger.info("Skip Metasploit: %s", config.skip_metasploit)
     logger.info("Preserve container: %s", config.preserve_container)
 
@@ -400,11 +413,46 @@ async def concurrency_lifespan(server):
 # FastMCP server — compose lifespans with | operator
 # ---------------------------------------------------------------------------
 
+def _transport_mode() -> str:
+    mode = os.getenv("SATURNX_TRANSPORT", "stdio").strip().lower()
+    if mode not in {"stdio", "http"}:
+        raise ValueError("SATURNX_TRANSPORT must be 'stdio' or 'http'")
+    return mode
+
+
+def _remote_auth_provider():
+    if _transport_mode() != "http":
+        return None
+    secret = os.getenv("SATURNX_JWT_SECRET", "")
+    if len(secret) < 32:
+        raise ValueError(
+            "SATURNX_JWT_SECRET must contain at least 32 characters for HTTP mode"
+        )
+    return JWTVerifier(
+        public_key=secret,
+        algorithm="HS256",
+        issuer="saturnx-render",
+        audience="saturnx-mcp",
+    )
+
 mcp = FastMCP(
     "SaturnX MCP – Kali MCP Server",
     instructions=SERVER_INSTRUCTIONS,
     lifespan=docker_lifespan | concurrency_lifespan,
+    auth=_remote_auth_provider(),
 )
+
+
+@mcp.custom_route("/health", methods=["GET"], include_in_schema=False)
+async def health(_request):
+    """Public, secret-free liveness endpoint for the hosting platform."""
+    return JSONResponse(
+        {
+            "status": "ok",
+            "service": "saturnx-mcp",
+            "transport": _transport_mode(),
+        }
+    )
 
 # Register tools installed in the confirmed capability profile, minus any
 # independently hidden SATURNX_DISABLED_TOOLS entries. Core tools are fixed.
@@ -542,6 +590,20 @@ def main():
             file=sys.stderr,
         )
         raise SystemExit(2)
+    if _transport_mode() == "http":
+        try:
+            port = int(os.getenv("PORT", "10000"))
+        except ValueError as exc:
+            raise ValueError("PORT must be an integer") from exc
+        if not 1 <= port <= 65_535:
+            raise ValueError("PORT must be between 1 and 65535")
+        mcp.run(
+            transport="http",
+            host="0.0.0.0",  # nosec B104 - required by managed web services
+            port=port,
+            path="/mcp",
+        )
+        return
     mcp.run()
 
 

@@ -15,7 +15,23 @@ from saturnx.core.tool_catalog import (
     required_backends,
 )
 
-IMAGE_INPUTS = ("Dockerfile", "docker/entrypoint.sh")
+IMAGE_INPUTS = (
+    "Dockerfile",
+    "docker/entrypoint.sh",
+    "pyproject.toml",
+    "requirements.txt",
+    "README.md",
+    "LICENSE",
+    "install.md",
+    "mcp.json",
+    "saturnx-mcp.json",
+    ".mcp.json",
+    "saturnx",
+    "skills/saturnx-mcp",
+    ".codex-plugin",
+    ".claude-plugin",
+    ".cursor-plugin",
+)
 IMAGE_FINGERPRINT_LABEL = "saturnx.build_fingerprint"
 IMAGE_CAPABILITIES_LABEL = "saturnx.capabilities"
 IMAGE_BUILD_CA_LABEL = "saturnx.build_ca_sha256"
@@ -145,14 +161,21 @@ def _image_build_fingerprint(
         digest.update(b"\0")
     for relative in IMAGE_INPUTS:
         path = root / relative
-        digest.update(relative.encode())
-        digest.update(b"\0")
-        digest.update(
-            _canonical_build_input(path)
-            if canonical_build_inputs
-            else path.read_bytes()
+        inputs = (
+            sorted(item for item in path.rglob("*") if item.is_file())
+            if path.is_dir()
+            else [path]
         )
-        digest.update(b"\0")
+        for item in inputs:
+            item_relative = item.relative_to(root).as_posix()
+            digest.update(item_relative.encode())
+            digest.update(b"\0")
+            digest.update(
+                _canonical_build_input(item)
+                if canonical_build_inputs
+                else item.read_bytes()
+            )
+            digest.update(b"\0")
     return digest.hexdigest()
 
 
