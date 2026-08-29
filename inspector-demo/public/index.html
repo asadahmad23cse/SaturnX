@@ -97,7 +97,7 @@
   <div class="card">
     <div class="status-row">
       <span id="statusDot" class="dot pending"></span>
-      <span id="statusText">Connecting to saturnx-mcp.onrender.com…</span>
+      <span id="statusText">Connecting to saturnx-mcp.onrender.com (may take up to a minute on a cold start)…</span>
     </div>
   </div>
 
@@ -145,7 +145,7 @@
     statusText.textContent = text;
   }
 
-  function rpc(method, params) {
+  function rpc(method, params, timeoutMs) {
     const id = msgId++;
     return new Promise((resolve, reject) => {
       pending.set(id, { resolve, reject });
@@ -167,12 +167,17 @@
       }).catch((err) => {
         if (pending.has(id)) { pending.delete(id); reject(err); }
       });
+      // The real SaturnX backend runs on a free tier that sleeps when idle
+      // and can take 30-60s to wake up on a cold hit — default generously so
+      // a cold start doesn't read as a broken demo. The read-only-block demo
+      // button passes a short override since that response never leaves
+      // this gateway.
       setTimeout(() => {
         if (pending.has(id)) {
           pending.delete(id);
           reject(new Error('Timed out waiting for a response.'));
         }
-      }, 15000);
+      }, timeoutMs || 60000);
     });
   }
 
@@ -244,7 +249,7 @@
     tryBtn.disabled = true;
     tryResult.innerHTML = '<pre>Sending tools/call for "' + esc(firstToolName) + '"…</pre>';
     try {
-      const result = await rpc('tools/call', { name: firstToolName, arguments: {} });
+      const result = await rpc('tools/call', { name: firstToolName, arguments: {} }, 8000);
       const isBlocked = result && result.isError && result.structuredContent && result.structuredContent.error_type === 'read_only_demo';
       tryResult.innerHTML = '<pre>' + (isBlocked ? '<span class="blocked">✗ BLOCKED (as expected)</span>\n\n' : '') + esc(JSON.stringify(result, null, 2)) + '</pre>';
     } catch (err) {

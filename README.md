@@ -17,15 +17,27 @@
 
 <p align="center">
   <a href="https://saturnx-inspector.onrender.com"><strong>Live read-only demo</strong></a>
-  — browse the real tool catalog of a running SaturnX instance; every
-  execution attempt is rejected server-side, so it's safe to click.
+  — browse the real tool catalog of a running SaturnX instance over the
+  Model Context Protocol. No target is ever contacted, and every
+  tool-execution attempt is rejected server-side, so it's safe to click.
 </p>
 
-<p align="center">
-  <a href="https://saturnx-inspector.onrender.com">
-    <img src="assets/demo-screenshot.png" alt="SaturnX live read-only demo showing its 16-tool catalog" width="720" />
-  </a>
-</p>
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://saturnx-inspector.onrender.com">
+        <img src="assets/demo-screenshot.png" alt="SaturnX live demo listing its real 16-tool catalog over MCP" width="380" />
+      </a>
+      <br/><sub><strong>Live MCP handshake</strong> — real tool catalog, fetched over the wire</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://saturnx-inspector.onrender.com">
+        <img src="assets/demo-blocked.png" alt="A tool-execution attempt rejected by two independent server-side layers" width="380" />
+      </a>
+      <br/><sub><strong>Execution attempt</strong> — rejected by two independent layers</sub>
+    </td>
+  </tr>
+</table>
 
 SaturnX MCP is a Python FastMCP server that gives terminal-capable AI agents a
 structured interface to security tools running in an owned Kali Docker
