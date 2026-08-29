@@ -140,6 +140,9 @@ RUN set -eux; \
     }; \
     safe_purge unzip; \
     has_cap curl || safe_purge curl; \
+    if has_cap nmap && getcap /usr/lib/nmap/nmap 2>/dev/null | grep -q '='; then \
+      setcap -r /usr/lib/nmap/nmap; \
+    fi; \
     apt-get clean; rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /opt/workspace/{py,sh,nuclei-templates,sqlmap-results,nmap-scripts,logs,browser} /usr/share/nmap/scripts/custom /usr/share/wordlists
