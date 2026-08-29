@@ -40,6 +40,16 @@ const inspector = spawn(
       CLIENT_PORT: String(inspectorPort),
       MCP_AUTO_OPEN_ENABLED: "false",
       ALLOWED_ORIGINS: `http://127.0.0.1:${inspectorPort}`,
+      // The Inspector binds to the loopback interface only (HOST=127.0.0.1),
+      // so it is unreachable from outside this container/instance — this
+      // gateway process is its only possible caller. Its own per-process
+      // session-token auth exists to stop arbitrary web pages from reaching
+      // a developer's local Inspector; it is redundant (and, without the
+      // gateway forwarding the token, actively breaks every proxied route)
+      // in this deployment, where the real access control is enforced
+      // independently by this gateway's read-only policy and by
+      // SaturnX's own ReadOnlyInspectorMiddleware.
+      DANGEROUSLY_OMIT_AUTH: "true",
     },
     stdio: ["ignore", "pipe", "pipe"],
   }
