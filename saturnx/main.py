@@ -25,6 +25,7 @@ from fastmcp.server.auth.providers.jwt import JWTVerifier
 from fastmcp.server.lifespan import lifespan
 from starlette.responses import JSONResponse
 
+from saturnx.core.access import ReadOnlyInspectorMiddleware
 from saturnx.core.concurrency import ConcurrencyManager
 from saturnx.core.config import SaturnXConfig
 from saturnx.core.docker_manager import DockerManager
@@ -486,6 +487,7 @@ register_post_exploitation_resources(mcp)
 # ToolResult so a single tool failure can never crash or wedge the session.
 # Complements the parameter interceptor above (different layer).
 # ---------------------------------------------------------------------------
+mcp.add_middleware(ReadOnlyInspectorMiddleware())
 mcp.add_middleware(ParameterFilterMiddleware())
 mcp.add_middleware(ToolExceptionFirewall())
 

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "saturnx-read-only": {
+      "type": "streamable-http",
+      "url": "https://saturnx-mcp.onrender.com/mcp",
+      "connectionTimeout": 60000,
+      "requestTimeout": 60000,
+      "metadata": {
+        "demoMode": "read-only"
+      }
+    }
+  }
+}

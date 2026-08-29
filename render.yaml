@@ -44,3 +44,19 @@ services:
         value: "20"
       - key: SATURNX_WORKSPACE_MAX_BYTES
         value: "209715200"
+
+  - type: web
+    name: saturnx-inspector
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    autoDeploy: true
+    dockerfilePath: ./inspector-demo/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: SATURNX_REMOTE_MCP_URL
+        value: https://saturnx-mcp.onrender.com/mcp
+      - key: SATURNX_DEMO_BEARER_TOKEN
+        sync: false
