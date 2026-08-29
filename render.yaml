@@ -20,6 +20,8 @@ services:
         value: shell,session,workspace,dns,whois,nmap,curl
       - key: SATURNX_INSTALLED_CAPABILITIES
         value: shell,session,workspace,dns,whois,nmap,curl
+      - key: SATURNX_CAPABILITY_MANIFEST_SHA256
+        value: 804226ace832d8e51f292670b9c2484d106a4738adac4bce5e48d36720dbe19a
       - key: SKIP_METASPLOIT
         value: "true"
       - key: PRESERVE_CONTAINER
