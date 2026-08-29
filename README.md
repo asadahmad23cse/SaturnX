@@ -21,6 +21,12 @@
   execution attempt is rejected server-side, so it's safe to click.
 </p>
 
+<p align="center">
+  <a href="https://saturnx-inspector.onrender.com">
+    <img src="assets/demo-screenshot.png" alt="SaturnX live read-only demo showing its 16-tool catalog" width="720" />
+  </a>
+</p>
+
 SaturnX MCP is a Python FastMCP server that gives terminal-capable AI agents a
 structured interface to security tools running in an owned Kali Docker
 container. It keeps evidence in managed host workspaces and returns bounded,
